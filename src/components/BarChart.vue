@@ -1,7 +1,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { Flight, UAV } from "../types";
+import { Flight, UAV, IncidentType } from "../types";
 import { formatDuration } from "../utils";
 
 const props = defineProps<{
@@ -28,12 +28,16 @@ const seriesData = computed(() => {
     }[selectedChart.value] as keyof Flight
     return [{ name: `${selectedChart.value} всего`, data: props.UAVsData.map(UAV => UAV.flights.reduce((acc, flight) => flight[measuredProperty] as number + acc, 0)) }]
   } else {
+
+    const getData = (incidentType: IncidentType) => props.UAVsData
+      .map(UAV => UAV.flights
+        .reduce((acc, flight) => flight.incidents?.filter(incident => incident.type === incidentType).length || 0 + acc, 0))
     return [{
       name: `Пожары`,
-      data: props.UAVsData.map(UAV => UAV.flights.reduce((acc, flight) => flight.incidents?.filter(incident => incident.type === 'fire').length || 0 + acc, 0))
+      data: getData('fire')
     }, {
       name: `Повреждения инфраструктуры`,
-      data: props.UAVsData.map(UAV => UAV.flights.reduce((acc, flight) => flight.incidents?.filter(incident => incident.type === 'infrastructureDamage').length || 0 + acc, 0))
+      data: getData('infrastructureDamage')
     }]
   }
 })
